@@ -227,7 +227,7 @@ function BoardHooks(props) {
 
   const handleSubmit = entryVal=> {
     console.log("Submitting: ", entryVal)
-    if (entryVal.action) {
+    if (entryVal.action === "eat") {
       let time = moment().hour(entryVal.hour).minute(entryVal.minute)
       setTimes([...times, {
         id: getID(),
