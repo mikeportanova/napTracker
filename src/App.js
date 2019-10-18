@@ -55,38 +55,80 @@ function EatButton(props) {
   )
 }
 
-// BUILD the object array, appending End Time to each Sleep segment when Wake is hit.
-// would it be better to use some sort of timer element instead of my discrete start/stop?
-// make it so if the user hits "eat" while sleeping, give alert instead of working
+function ManualEntry(props) {
+  const [entryVal, setEntryVal] = useState({
+    eventName: "Sleep",
+    hour: 4,
+    minute: 20
+  })
+  const [actionVal, setActionVal] = useState("Sleep")
+  const [timeVal, setTimeVal] = useState([4,20])
 
-// function TimelineOld(props) {
-//   let result = props.times.reduce(function(accumulator,currentValue) {
-//     accumulator[currentValue.key] = currentValue.val
-//     return accumulator
-//   },{})
-//   let timesList = []
-//   props.times.map((item,i) => timesList.push(
-//     <tr>
-//       <th>{Object.keys(item)[0]}</th>
-//       <th>{Object.values(item)[0]}</th>
-//     </tr>
-//   ))
-//   console.log("Map: ",timesList)
+  function handleChange(e) {
+    console.log("time: ", e.target.value)
+    if (e.target.name === "hour") {
+      setTimeVal([e.target.value,timeVal[1]])
+      setEntryVal({
+        eventName: entryVal.eventName,
+        hour: e.target.value,
+        minute: entryVal.minute
+      })
+    } else if (e.target.name === "minute") {
+      setTimeVal([timeVal[0],e.target.value])
+      setEntryVal({
+        eventName: entryVal.eventName,
+        hour: entryVal.hour,
+        minute: e.target.value
+      })
+    } else {
+      setActionVal(e.target.value)
+      setEntryVal({
+        eventName: e.target.value,
+        hour: entryVal.hour,
+        minute: entryVal.minute
+      })
+    }
+  }
+  function generateIntegers() {
+    let arr = []
+    for (let i=0; i<61; i++) {
+      arr.push(i)
+    }
+    return arr
+  }
 
-//   return (
-//     <Table striped bordered size="sm">
-//       <thead>
-//         <tr>
-//           <th>Action</th>
-//           <th>Time</th>
-//         </tr>
-//       </thead>
-//       <tbody>
-//         {timesList}
-//       </tbody>
-//     </Table>
-//   )
-// }
+  function submitEntry(e) {
+    e.preventDefault()
+    props.handleSubmit(entryVal);
+  }
+
+  return(
+    <form onSubmit={submitEntry}>
+      <label>
+        Manual event:
+        <select name="event" value={actionVal} onChange={handleChange}>
+          <option value="Sleep">Sleep</option>
+          <option value="Wake">Wake</option>
+        </select>
+      </label>
+      <label>
+        Manual time:
+        <select name="hour" value={timeVal[0]} onChange={handleChange}>
+          {generateIntegers().slice(0,24).map((item) =>  {
+              return <option value={item}>{item}</option>
+          })}
+        </select>
+        <select name="minute" value={timeVal[1]} onChange={handleChange}>
+        {generateIntegers().slice(0,60).map((item) =>  {
+              return <option value={item}>{item}</option>
+          })}
+        </select>
+      </label>
+      <input type="submit" value="Submit"/>
+
+    </form>
+  )
+}
 
 function BoardHooks(props) {
   const [times, setTimes] = useState(
@@ -103,8 +145,6 @@ function BoardHooks(props) {
   const [id, setID] = useState(
     parseInt(localStorage.getItem("ID")) || 0
   )
-
-
 
   const getID = () => {
     let tempID = id + 1
@@ -140,6 +180,24 @@ function BoardHooks(props) {
         canMove: false,
         canResize: false,
       }]);
+    }
+  }
+
+
+
+  const handleSubmit = entryVal=> {
+    console.log("Submitting: ", entryVal)
+    if (entryVal.eventName === "Sleep") {
+      setTimer(moment().hour(entryVal.hour).minute(entryVal.minute))
+    } else if (entryVal.eventName === "Wake") {
+      setTimes([...times,{
+        id: getID(),
+        group: 1,
+        start_time: timer,
+        end_time: moment().hour(entryVal.hour).minute(entryVal.minute),
+        canMove: false,
+        canResize: false
+      }])
     }
   }
 
@@ -180,121 +238,10 @@ function BoardHooks(props) {
           // visibleTimeStart={moment().startOf('day').unix()}
           // visibleTimeEnd={moment().endOf('day').unix()}
         />
+        <div>
+          <ManualEntry handleSubmit = {handleSubmit}/>
+        </div>
     </div>
   )
 }
-
-
-//implement timeline here
-
-
-// class Board extends React.Component {
-//   constructor(props) {
-//     super(props)
-//     this.state = {
-//       id: 0,
-//       times: [],
-//       sleepWake: "Sleep",
-//       timer: 0,
-//     }
-//     this.handleClick = this.handleClick.bind(this)
-//     this.handleScroll = this.handleScroll.bind(this)
-//   }
-//   getID() {
-//     id++
-//     return id
-//   }
-//   handleClick(e) {
-//     let label = e.target.name
-//     console.log("Label: ", label)
-//     let time = Date.now()
-//     if (label === "Sleep") {
-//       this.setState({
-//         timer: time,
-//         sleepWake: "Wake"
-//       })
-//     } else if (label === "Wake") {
-//       this.setState({
-//         times: [...this.state.times,{
-//           id: this.getID(),
-//           group: 1,
-//           start_time: this.state.timer,
-//           end_time: time,
-//           canMove: false,
-//           canResize: false
-          
-//         }],
-//         sleepWake: "Sleep"
-//       })
-//     } else {
-//       this.setState({
-//         times: [...this.state.times,{
-//           id: this.getID(),
-//           group: 2,
-//           start_time: time,
-//           end_time: time + 900
-//         }]
-//       })
-//     }
-//   }
-
-//   handleScroll(visibleTimeStart, visibleTimeEnd, updateScrollCanvas) {
-//     if (visibleTimeStart < minTime && visibleTimeEnd > maxTime) {
-//       updateScrollCanvas(minTime, maxTime)
-//     } else if (visibleTimeStart < minTime) {
-//       updateScrollCanvas(minTime, minTime + (visibleTimeEnd - visibleTimeStart))
-//     } else if (visibleTimeEnd > maxTime) {
-//       updateScrollCanvas(maxTime - (visibleTimeEnd - visibleTimeStart), maxTime)
-//     } else {
-//       updateScrollCanvas(visibleTimeStart, visibleTimeEnd)
-//     }
-//   }
-
-//   render() {
-//     console.log("Times state: ", this.state.times)
-//     return (
-//       <div className="container">
-//         <div>
-//           <SleepButton handleClick = {this.handleClick} sleepWake={this.state.sleepWake}/>
-//           <EatButton handleClick = {this.handleClick}/>
-//         </div>
-//           <Timeline 
-//             groups={groups}
-//             items={this.state.times}
-//             defaultTimeStart={moment().add(-12, 'hour')}
-//             defaultTimeEnd={moment().add(12, 'hour')}
-//             minZoom={60*1000}
-//             maxZoom={60*60*24*1000}
-//             // onTimeChange={this.handleScroll}
-//             // visibleTimeStart={moment().startOf('day').unix()}
-//             // visibleTimeEnd={moment().endOf('day').unix()}
-//           />
-//       </div>
-//     )
-//   }
-// }
-
-
-
-// function App() {
-//   return (
-//     <div className="App">
-//       <header className="App-header">
-//         <img src={logo} className="App-logo" alt="logo" />
-//         <p>
-//           Edit <code>src/App.js</code> and save to reload.
-//         </p>
-//         <a
-//           className="App-link"
-//           href="https://reactjs.org"
-//           target="_blank"
-//           rel="noopener noreferrer"
-//         >
-//           Learn React
-//         </a>
-//       </header>
-//     </div>
-//   );
-// }
-
 export default BoardHooks;

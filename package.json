@@ -4,6 +4,7 @@
   "private": true,
   "dependencies": {
     "bootstrap": "^4.3.1",
+    "esm": "^3.2.25",
     "interactjs": "^1.6.2",
     "moment": "^2.24.0",
     "react": "^16.10.2",
