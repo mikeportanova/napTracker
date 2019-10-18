@@ -260,7 +260,9 @@ function BoardHooks(props) {
 
   return (
     <div className="container">
-      <div>
+      <h1>Welcome to the Audrey Sleep and Eat Tracker</h1>
+      <div style={{"padding-top": "10px"}}>
+        <h3>Realtime Entry of Data</h3>
         <SleepButton handleClick = {handleClick} sleepWake={status}/>
         <EatButton handleClick = {handleClick}/>
       </div>
@@ -273,6 +275,7 @@ function BoardHooks(props) {
           maxZoom={60*60*24*1000}
         />
         <div>
+          <h3 style={{"padding-top": "10px"}}>Manual Entry of Data</h3>
           <ManualEntry handleSubmit = {handleSubmit}/>
         </div>
         <div>
