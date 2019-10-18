@@ -16,7 +16,7 @@ import Timeline from 'react-calendar-timeline/lib'
 import 'react-calendar-timeline/lib/Timeline.css'
 import moment from 'moment'
 
-const groups = [{ id: 1, title: 'Sleep/Wake'}, { id: 2, title: 'Eat'}]
+const groups = [{ id: 1, title: 'Sleep'}, { id: 2, title: 'Eat'}]
 const minTime = moment().startOf('day').unix()
 const maxTime = moment().endOf('day').unix()
 const testVal = moment().add(6, 'hours').valueOf()
@@ -32,6 +32,7 @@ console.log("minTime: ", minTime, "maxTime: ", maxTime, "Test: ", testVal)
 // (3) A timeline that shows sleep intervals and eating events
 // FUTURE: store this data over multiple days and display analytics.
 
+///create a button that toggles between sleep and wake
 function SleepButton(props) {
   let label = (props.sleepWake === "Sleep")?"Sleep":"Wake"
   return (
@@ -44,6 +45,7 @@ function SleepButton(props) {
   )
 }
 
+///create a button to indicate eating
 function EatButton(props) {
   return (
     <Button
@@ -55,48 +57,38 @@ function EatButton(props) {
   )
 }
 
+/// need integers for the dropdowns
+function generateIntegers() {
+  let arr = []
+  for (let i=0; i<61; i++) {
+    arr.push(i)
+  }
+  return arr
+}
+
+/// create a way to manually enter times
 function ManualEntry(props) {
   const [entryVal, setEntryVal] = useState({
-    eventName: "Sleep",
-    hour: 4,
-    minute: 20
+    startHour: 4,
+    startMinute: 20,
+    endHour: 16,
+    endMinute: 20
   })
-  const [actionVal, setActionVal] = useState("Sleep")
-  const [timeVal, setTimeVal] = useState([4,20])
+  const [timeVal, setTimeVal] = useState({
+    startHour: 4,
+    startMinute: 20,
+    endHour: 16,
+    endMinute: 20
+  })
 
   function handleChange(e) {
     console.log("time: ", e.target.value)
-    if (e.target.name === "hour") {
-      setTimeVal([e.target.value,timeVal[1]])
-      setEntryVal({
-        eventName: entryVal.eventName,
-        hour: e.target.value,
-        minute: entryVal.minute
-      })
-    } else if (e.target.name === "minute") {
-      setTimeVal([timeVal[0],e.target.value])
-      setEntryVal({
-        eventName: entryVal.eventName,
-        hour: entryVal.hour,
-        minute: e.target.value
-      })
-    } else {
-      setActionVal(e.target.value)
-      setEntryVal({
-        eventName: e.target.value,
-        hour: entryVal.hour,
-        minute: entryVal.minute
-      })
-    }
-  }
-  function generateIntegers() {
-    let arr = []
-    for (let i=0; i<61; i++) {
-      arr.push(i)
-    }
-    return arr
-  }
+    setEntryVal({...entryVal, [e.target.name]: e.target.value})
+    setTimeVal({...timeVal,[e.target.name]: e.target.value})
+      }
 
+
+  ///pass the data back up to the parent component
   function submitEntry(e) {
     e.preventDefault()
     props.handleSubmit(entryVal);
@@ -104,28 +96,76 @@ function ManualEntry(props) {
 
   return(
     <form onSubmit={submitEntry}>
+      <div>
       <label>
-        Manual event:
-        <select name="event" value={actionVal} onChange={handleChange}>
-          <option value="Sleep">Sleep</option>
-          <option value="Wake">Wake</option>
-        </select>
-      </label>
-      <label>
-        Manual time:
-        <select name="hour" value={timeVal[0]} onChange={handleChange}>
+        Sleep Start Time: 
+        <select name="startHour" value={timeVal.startHour} onChange={handleChange}>
           {generateIntegers().slice(0,24).map((item) =>  {
               return <option value={item}>{item}</option>
           })}
         </select>
-        <select name="minute" value={timeVal[1]} onChange={handleChange}>
+        <select name="startMinute" value={timeVal.startMinute} onChange={handleChange}>
         {generateIntegers().slice(0,60).map((item) =>  {
               return <option value={item}>{item}</option>
           })}
         </select>
       </label>
-      <input type="submit" value="Submit"/>
+      </div>
+      <div>
+      <label>
+        Sleep End Time: 
+        <select name="endHour" value={timeVal.endHour} onChange={handleChange}>
+          {generateIntegers().slice(0,24).map((item) =>  {
+              return <option value={item}>{item}</option>
+          })}
+        </select>
+        <select name="endMinute" value={timeVal.endMinute} onChange={handleChange}>
+        {generateIntegers().slice(0,60).map((item) =>  {
+              return <option value={item}>{item}</option>
+          })}
+        </select>
+      </label>
+      </div>
+      <input type="submit" value="Submit Sleep"/>
+    </form>
+  )
+}
 
+function ManualEntryEat(props) {
+  const [entryVal, setEntryVal] = useState({
+    action: "eat",
+    hour: 4,
+    minute: 20
+  })
+
+  function submitEntry(e) {
+    e.preventDefault()
+    props.handleSubmit(entryVal);
+  }
+
+  function handleChange(e) {
+    console.log("time: ", e.target.value)
+    setEntryVal({...entryVal, [e.target.name]: e.target.value})
+  }
+
+  return (
+    <form onSubmit = {submitEntry}>
+      <div>
+      <label>
+        Eating Time: 
+        <select name="hour" value={entryVal.hour} onChange={handleChange}>
+          {generateIntegers().slice(0,24).map((item) =>  {
+              return <option value={item}>{item}</option>
+          })}
+        </select>
+        <select name="minute" value={entryVal.minute} onChange={handleChange}>
+        {generateIntegers().slice(0,60).map((item) =>  {
+              return <option value={item}>{item}</option>
+          })}
+        </select>
+      </label>
+      </div>
+      <input type="submit" value="Submit Eat"/>
     </form>
   )
 }
@@ -138,10 +178,12 @@ function BoardHooks(props) {
     localStorage.getItem("Status") || "Sleep"
   );
 
+  ///need a "timer" to store sleep start
   const [timer, setTimer] = useState(
     parseInt(localStorage.getItem("timer")) || 0
   );
 
+  ///need an id 
   const [id, setID] = useState(
     parseInt(localStorage.getItem("ID")) || 0
   )
@@ -183,22 +225,28 @@ function BoardHooks(props) {
     }
   }
 
-
-
   const handleSubmit = entryVal=> {
     console.log("Submitting: ", entryVal)
-    if (entryVal.eventName === "Sleep") {
-      setTimer(moment().hour(entryVal.hour).minute(entryVal.minute))
-    } else if (entryVal.eventName === "Wake") {
-      setTimes([...times,{
+    if (entryVal.action) {
+      let time = moment().hour(entryVal.hour).minute(entryVal.minute)
+      setTimes([...times, {
         id: getID(),
+          group: 2,
+          start_time: time,
+          end_time: time.add(900, 'milliseconds'),
+          canMove: false,
+          canResize: false
+      }])
+    } else {
+    setTimes([...times, {
+      id: getID(),
         group: 1,
-        start_time: timer,
-        end_time: moment().hour(entryVal.hour).minute(entryVal.minute),
+        start_time: moment().hour(entryVal.startHour).minute(entryVal.startMinute),
+        end_time: moment().hour(entryVal.endHour).minute(entryVal.endMinute),
         canMove: false,
         canResize: false
-      }])
-    }
+    }])
+  }
   }
 
   useEffect(() => {
@@ -210,17 +258,6 @@ function BoardHooks(props) {
     console.log(id)
   })
 
-  const handleScroll = (visibleTimeStart, visibleTimeEnd, updateScrollCanvas) => {
-    if (visibleTimeStart < minTime && visibleTimeEnd > maxTime) {
-      updateScrollCanvas(minTime, maxTime)
-    } else if (visibleTimeStart < minTime) {
-      updateScrollCanvas(minTime, minTime + (visibleTimeEnd - visibleTimeStart))
-    } else if (visibleTimeEnd > maxTime) {
-      updateScrollCanvas(maxTime - (visibleTimeEnd - visibleTimeStart), maxTime)
-    } else {
-      updateScrollCanvas(visibleTimeStart, visibleTimeEnd)
-    }
-  }
   return (
     <div className="container">
       <div>
@@ -234,12 +271,12 @@ function BoardHooks(props) {
           defaultTimeEnd={moment().add(12, 'hour')}
           minZoom={60*1000}
           maxZoom={60*60*24*1000}
-          // onTimeChange={this.handleScroll}
-          // visibleTimeStart={moment().startOf('day').unix()}
-          // visibleTimeEnd={moment().endOf('day').unix()}
         />
         <div>
           <ManualEntry handleSubmit = {handleSubmit}/>
+        </div>
+        <div>
+          <ManualEntryEat handleSubmit = {handleSubmit}/>
         </div>
     </div>
   )
