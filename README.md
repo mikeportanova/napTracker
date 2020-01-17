@@ -1,3 +1,21 @@
+## Naptracker
+
+This is a pretty simple app I built for my wife and I to keep track of our baby's napping and eating schedule. It was useful for about a month until she settled in to a routine.
+
+### Features
+
+* Allows manual entry of naps or feedings that one might have not annotated in real time
+* Provides a Start/Stop button for naps
+* Assumes feedings take ~ 15 minutes
+* Plots all time on a timeline using React-Calendar-Timeline (a somewhat-shaky module I found)
+* Stores time values with LocalStorage. Some day I might convert this to a node.js backend with users, but I don't really need this app anymore.
+
+Enjoy!
+
+
+
+# Boilerplate stuff from (lazily) using Create React App to get this little app off the ground.
+
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
 ## Available Scripts
